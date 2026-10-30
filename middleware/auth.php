@@ -1,48 +1,57 @@
 <?php
-const LOGIN_URL = '/pages/auth/login.php';
-const HOME_URL = '/pages/books/index.php';
-const FORBIDDEN_URL = '/pages/errors/403.php';
+const LOGIN_URL = "/pages/auth/login.php";
+const BOOK_INDEX_URL = "/pages/books/index.php";
+const FORBIDDEN_URL = "/pages/errors/403.php";
 
-function startSession()
+// Mengecek apakah sebuah session itu sudah di mulai atau belum, jika belum maka session akan dimulai
+function sessionStart()
 {
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
     }
 }
 
+// Mengecek apakah seorang penguna sudah login atau belum
 function isLoggedIn()
 {
-    startSession();
-
-    return isset($_SESSION['user']['id']);
+    sessionStart();
+    $isLoggedIn = isset($_SESSION['user']);
+    return $isLoggedIn;
 }
 
+// Mendapatkan data pengguna yang sudah login
 function getAuthUser()
 {
-    startSession();
+    sessionStart();
+    $user = $_SESSION['user'] ?? null;
 
-    return $_SESSION['user'] ?? null;
+    return $user;
 }
 
+// Mengecek apakah role pengguna itu sesuai atau tidak
 function hasRole(array $roles)
 {
     $user = getAuthUser();
 
-    return $user !== null && in_array($user['role'], $roles, true);
+    $isUserHasAuthorizeRole = $user !== null && in_array($user['role'], $roles);
+
+    return $isUserHasAuthorizeRole;
 }
 
-// Hanya user yang sudah login yang boleh masuk.
+// Menghandle pengguna yang belum login
 function requireAuth()
 {
     if (!isLoggedIn()) {
-        $_SESSION['errors'] = ['login' => "Silakan login terlebih dahulu"];
+        $_SESSION['errors'] = [
+            'login' => 'Silahkan login terlebih dahulu sebelum mengakses halaman ini'
+        ];
 
         header('Location: ' . LOGIN_URL);
         exit;
     }
 }
 
-// Hanya user yang sudah login DAN memiliki salah satu role yang diizinkan.
+// Menghandle pengguna yang tidak memiliki role yang sesuai atau tidak terautorisasi
 function requireRole(array $roles)
 {
     requireAuth();
@@ -53,11 +62,12 @@ function requireRole(array $roles)
     }
 }
 
-// Halaman khusus tamu (login/register): user yang sudah login diarahkan ke beranda.
+// Menghandle pengguna yang sudah login sebelumnya
 function requireGuest()
 {
     if (isLoggedIn()) {
-        header('Location: ' . HOME_URL);
+        header('Location: ' . BOOK_INDEX_URL);
         exit;
     }
 }
+?>
