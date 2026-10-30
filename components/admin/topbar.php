@@ -1,5 +1,6 @@
 <?php
-$user = $_SESSION['user'];
+require_once __DIR__ . "/../../middleware/auth.php";
+$user = getAuthUser();
 ?>
 <header class="app-topbar">
   <div class="page-title">
@@ -9,8 +10,8 @@ $user = $_SESSION['user'];
   <div class="topbar-user">
     <span class="avatar">BS</span>
     <div>
-    <?= $user['name'] ?? 'Guest' ?>
-    <br>
+      <?= $user['name'] ?? 'Guest' ?>
+      <br>
       <span class="badge badge-member" style="margin-top:2px;">
         <?= $user['role'] === 'member' ? 'Member' : 'Admin' ?>
       </span>

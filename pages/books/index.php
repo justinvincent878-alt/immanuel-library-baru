@@ -1,23 +1,23 @@
 <?php
-require_once __DIR__ . "/../../repositories/book-repository.php";
 require_once __DIR__ . "/../../middleware/auth.php";
 requireAuth();
+require_once __DIR__ . "/../../repositories/book-repository.php";
 require_once __DIR__ . "/../../repositories/category-repository.php";
 
-$perPage = 2;
-$currentPage = max(1, intval($_GET['page'] ?? 1));
-$search = trim($_GET['search'] ?? '');
-$category_id = trim($_GET['category_id'] ?? '');
+$perPage = 5;
+$currentPage = max(1, $_GET['page'] ?? 1);
 
-if ($category_id !== '' && !ctype_digit($category_id)) {
- $category_id = "";
+$search = trim($_GET['search'] ?? "");
+$categoryId = $_GET['category'] ?? "";
+if (!ctype_digit((string) $categoryId)) {
+  $categoryId = "";
 }
 
+$page = max(1, (int) ($_GET['page'] ?? 1));
+
 $categories = getCategories();
-$totalBooks = countOfBooks($search, $category_id);
-$totalPages = max(1, (int) ceil($totalBooks / $perPage));
-$currentPage = min($currentPage, $totalPages);
-$books = getBooks($search, $category_id, $currentPage, $perPage);
+$books = getBooks($search, $categoryId, $page, $perPage);
+
 
 $pageTitle = "Manajemen Buku";
 $pageSubtitle = "Kelola data buku, kategori, dan penulis";
@@ -42,19 +42,20 @@ $pageSubtitle = "Kelola data buku, kategori, dan penulis";
 
       <div class="app-content">
         <div class="toolbar">
-          <form method="GET" class="toolbar-filters">
+          <form method="get" class="toolbar-filters">
             <div class="search-box">
               <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="7" />
                 <path d="m21 21-4.3-4.3" />
               </svg>
-              <input value="<?= htmlspecialchars($search, ENT_QUOTES, 'UTF-8') ?>" type="text" name="search" class="search-input" placeholder="Cari judul buku...">
+              <input type="text" name="search" class="search-input" placeholder="Cari judul buku..."
+                value="<?= htmlspecialchars($search) ?>">
             </div>
-            <select name="category_id" class="filter-select">
+            <select name="category" class="filter-select">
               <option value="">Semua Kategori</option>
               <?php foreach ($categories as $category): ?>
-                <option <?= $category_id === $category['id'] ? 'selected' : '' ?> value="<?= $category['id'] ?>">
+                <option value="<?= $category['id'] ?>" <?= $category['id'] == $categoryId ? "selected" : "" ?>>
                   <?= $category['name'] ?>
                 </option>
               <?php endforeach ?>
@@ -113,17 +114,15 @@ $pageSubtitle = "Kelola data buku, kategori, dan penulis";
         </div>
 
         <div class="pagination">
-          <?php if ($currentPage > 1): ?>
-            <a href="?search=<?= urlencode($search) ?>&category_id=<?= urlencode($category_id) ?>&page=<?= $currentPage - 1 ?>"
+          <?php if ($page > 1): ?>
+            <a href="?<?= http_build_query(['search' => $search, 'category' => $categoryId, 'page' => $page - 1]) ?>"
               class="pagination-btn">&lt;</a>
           <?php else: ?>
             <span class="pagination-btn is-disabled">&lt;</span>
           <?php endif ?>
 
-          <span class="pagination-btn is-disabled"><?= $currentPage ?> / <?= $totalPages ?></span>
-
-          <?php if ($currentPage < $totalPages): ?>
-            <a href="?search=<?= urlencode($search) ?>&category_id=<?= urlencode($category_id) ?>&page=<?= $currentPage + 1 ?>"
+          <?php if ($page): ?>
+            <a href="?<?= http_build_query(['search' => $search, 'category' => $categoryId, 'page' => $page + 1]) ?>"
               class="pagination-btn">&gt;</a>
           <?php else: ?>
             <span class="pagination-btn is-disabled">&gt;</span>
